@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { zodResolver} from "@hookform/resolvers/zod"
 import { tAuthCredentialsValidator, AuthCredentialsValidator } from '@/lib/validators/account-credential'
-import { trpc } from '@/trpc/client'
 
 const Page = () => {
     const {
@@ -21,10 +20,6 @@ const Page = () => {
       } = useForm<tAuthCredentialsValidator>({
         resolver: zodResolver(AuthCredentialsValidator),
       })
-
-    const { data } = trpc.anyApiEndpoint.useQuery()
-
-    console.log(data)
 
     const onSubmit = ({email, password}: tAuthCredentialsValidator) => {
         // mutate({ email, password })

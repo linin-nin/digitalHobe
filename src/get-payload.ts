@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import path from "path"
 import type {InitOptions}  from "payload/config"
-import payload, { Payload } from "payload/dist"
+import payload, { Payload } from "payload"
 
 
 dotenv.config({
@@ -31,7 +31,7 @@ interface Args {
     initOptions?: Partial<InitOptions>
 }
 
-export const getPayloadClient = async({initOptions}: Args={}):Promise<Payload> => {
+export const getPayloadClient = async({initOptions}: Args={}): Promise<Payload> => {
     if(!process.env.PAYLOAD_SECRET) {
         throw new Error("PAYLOAD_SECRET is missing.")
     }
@@ -42,11 +42,11 @@ export const getPayloadClient = async({initOptions}: Args={}):Promise<Payload> =
 
     if(!cashed.promise) {
         cashed.promise = payload.init({
-            // email: {
-            //     transport: transporter,
-            //     fromAddress: 'hello@joshtriedcoding.com',
-            //     fromName: 'DigitalHippo',
-            //   },
+            email: {
+                // transport: transporter,
+                fromAddress: 'hello@joshtriedcoding.com',
+                fromName: 'DigitalHippo',
+              },
             secret: process.env.PAYLOAD_SECRET,
             local: initOptions?.express ? false : true,
             ...(initOptions || {}),
