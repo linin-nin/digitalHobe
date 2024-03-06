@@ -1,10 +1,11 @@
+import { ExpressContext } from '@/server';
 import { initTRPC } from '@trpc/server';
  
 /**
  * Initialization of tRPC backend
  * Should be done only once per backend!
  */
-const t = initTRPC.context().create();
+const t = initTRPC.context<ExpressContext>().create();
  
 /**
  * Export reusable router and procedure helpers

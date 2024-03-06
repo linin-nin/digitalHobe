@@ -12,11 +12,25 @@ import { useForm } from 'react-hook-form'
 import { zodResolver} from "@hookform/resolvers/zod"
 import { tAuthCredentialsValidator, AuthCredentialsValidator } from '@/lib/validators/account-credential'
 import { trpc } from '@/trpc/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {toast} from "sonner"
 import { ZodError } from 'zod'
 
 const Page = () => {
+
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const isSeller = searchParams.get('as') === 'seller'
+    const origin = searchParams.get('origin')
+
+    const continueAsSeller = () => {
+      router.push('?as=seller')
+    }
+
+    const continueAsBuyer = () => {
+      router.replace('/sign-in', undefined)
+    }
+    
     const {
         register,
         handleSubmit,
@@ -25,39 +39,34 @@ const Page = () => {
         resolver: zodResolver(AuthCredentialsValidator),
       })
 
-    const router = useRouter()
+    const { mutate: signIn, isPending } =
+    trpc.auth.signIn.useMutation({
+        onSuccess: async () => {
+          toast.success('Signed in successfully')
 
-    const { mutate, isPending } =
-    trpc.auth.createPayloadUser.useMutation({
-      onError: (err) => {
-        if (err.data?.code === 'CONFLICT') {
-          toast.error(
-            'This email is already in use. Sign in instead?'
-          )
+          router.refresh()
 
-          return
-        }
+          if (origin) {
+            router.push(`/${origin}`)
+            return
+          }
 
-        if (err instanceof ZodError) {
-          toast.error(err.issues[0].message)
+          if (isSeller) {
+            router.push('/sell')
+            return
+          }
 
-          return
-        }
-
-        toast.error(
-          'Something went wrong. Please try again.'
-        )
-      },
-      onSuccess: ({ sentToEmail }) => {
-        toast.success(
-          `Verification email sent to ${sentToEmail}.`
-        )
-        router.push('/verify-email?to=' + sentToEmail)
-      },
+          router.push('/')
+        },
+        onError: (err) => {
+          if (err.data?.code === 'UNAUTHORIZED') {
+            toast.error('Invalid email or password.')
+          }
+        },
     })
 
     const onSubmit = ({email, password}: tAuthCredentialsValidator) => {
-        mutate({ email, password })
+        signIn({ email, password })
     }
 
   return (
@@ -67,10 +76,10 @@ const Page = () => {
             <div className='flex flex-col items-center space-y-2 text-center'>
             <Icons.logo className='h-20 w-20' />
             <h1 className='text-2xl font-semibold tracking-tight'>
-            Create an account
+            Sign in to your {isSeller ? 'seller' : ''}{' '} account
             </h1>
             <Link 
-            className={buttonVariants({variant: "link", className: "h-4 w-4"})}  href="/sign-in">Already have an account? Sign-in<ArrowRight className='h-4 w-4' /></Link>
+            className={buttonVariants({variant: "link", className: "h-4 w-4"})}  href="/sign-up">Don&apos;t have an account? <ArrowRight className='h-4 w-4' /></Link>
             </div>
 
             <div className='grid gap-6'>
@@ -94,9 +103,40 @@ const Page = () => {
                               </p>
                             )}
                         </div>
-                        <Button>Sign up</Button>
+                        <Button>Sign in</Button>
                     </div>
                 </form>
+
+                <div className='relative'>
+                  <div
+                    aria-hidden='true'
+                    className='absolute inset-0 flex items-center'>
+                    <span className='w-full border-t' />
+                  </div>
+                  <div className='relative flex justify-center text-xs uppercase'>
+                    <span className='bg-background px-2 text-muted-foreground'>
+                      or
+                    </span>
+                  </div>
+                </div>
+
+                {isSeller ? (
+                  <Button
+                    onClick={continueAsBuyer}
+                    variant='secondary'
+                    disabled={isPending}>
+                    Continue as customer
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={continueAsSeller}
+                    variant='secondary'
+                    disabled={isPending}
+                    >
+                    Continue as seller
+                  </Button>
+                )}
+
             </div>
         </div>
     </div>

@@ -4,11 +4,16 @@ import Link from 'next/link'
 import { Icons } from './Icon'
 import NavItems from './NavItems'
 import { buttonVariants } from './ui/button'
+import { getServerSideUser } from '@/lib/payload-utils'
+import { cookies } from 'next/headers'
+import UserAccountNav from './UserAccountNav'
 // import Cart from './Cart'
 
-const Navbar = () => {
+const Navbar = async() => {
 
-    const user = null
+    const nextCookies = cookies()
+    const { user } = await getServerSideUser(nextCookies)
+
   return (
     <div className='bg-white sticky top-0 z-50 inset-x-0 h-16'>
         <header className='relative bg-white'>
@@ -41,10 +46,9 @@ const Navbar = () => {
                                 )}
 
                                 {user ? ( 
-                                    // <UserAccountNav user={user}/> 
-                                    <p></p>
+                                    <UserAccountNav user={user}/> 
                                 ) : (
-                                    <Link href='sign-in' className={buttonVariants({
+                                    <Link href='sign-up' className={buttonVariants({
                                         variant: "ghost",
                                     })}>
                                         Create account
